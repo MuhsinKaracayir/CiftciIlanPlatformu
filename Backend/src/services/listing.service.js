@@ -1,0 +1,260 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { AppError } from '../utils/AppError.js';
+
+export class ListingService {
+  constructor(listingRepository, uploadsDir = path.resolve(process.cwd(), 'uploads')) {
+    if (!listingRepository) {
+      throw new Error('ListingService icin listingRepository bagimliligi zorunludur.');
+    }
+    this.listingRepository = listingRepository;
+    this.uploadsDir = uploadsDir;
+  }
+
+  async #deleteImageFromDisk(imageUrl) {
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      return;
+    }
+
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return;
+    }
+
+    const safeFileName = path.basename(imageUrl);
+    if (!safeFileName) {
+      return;
+    }
+
+    const absoluteFilePath = path.join(this.uploadsDir, safeFileName);
+
+    try {
+      await fs.unlink(absoluteFilePath);
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        console.error(`[ListingService]: Eski resim dosyasi silinemedi (${safeFileName}):`, err.message);
+      }
+    }
+  }
+
+  async getAllListings(query = {}) {
+    const page = Math.max(1, Number(query.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(query.limit) || 10));
+    const offset = (page - 1) * limit;
+
+    const search = typeof query.search === 'string' && query.search.trim() !== ''
+      ? query.search.trim()
+      : null;
+
+    const category = typeof query.category === 'string' && query.category.trim() !== ''
+      ? query.category.trim()
+      : null;
+
+    const location = typeof query.location === 'string' && query.location.trim() !== ''
+      ? query.location.trim()
+      : null;
+
+    const parsedMinPrice = query.minPrice !== undefined && query.minPrice !== '' ? Number(query.minPrice) : NaN;
+    const minPrice = Number.isFinite(parsedMinPrice) && parsedMinPrice >= 0 ? parsedMinPrice : null;
+
+    const parsedMaxPrice = query.maxPrice !== undefined && query.maxPrice !== '' ? Number(query.maxPrice) : NaN;
+    const maxPrice = Number.isFinite(parsedMaxPrice) && parsedMaxPrice >= 0 ? parsedMaxPrice : null;
+
+    const validStatuses = new Set(['active', 'sold', 'passive']);
+    let status = null;
+
+    if (typeof query.status === 'string') {
+      const trimmedStatus = query.status.trim().toLowerCase();
+      if (trimmedStatus === 'all') {
+        status = null;
+      } else if (validStatuses.has(trimmedStatus)) {
+        status = trimmedStatus;
+      }
+    } else {
+      // Varsayilan olarak yalnizca aktif ilanlar gosterilir
+      status = 'active';
+    }
+
+    const parsedUserId = query.userId !== undefined && query.userId !== '' ? Number(query.userId) : NaN;
+    const userId = Number.isInteger(parsedUserId) && parsedUserId > 0 ? parsedUserId : null;
+
+    const filterParams = { search, category, location, minPrice, maxPrice, status, userId };
+
+    const [items, totalItems] = await Promise.all([
+      this.listingRepository.findAll({ offset, limit, ...filterParams }),
+      this.listingRepository.count(filterParams),
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        totalItems,
+        totalPages,
+      },
+    };
+  }
+
+  async getListingById(id) {
+    const listing = await this.listingRepository.findById(id);
+
+    if (!listing) {
+      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+    }
+
+    return listing;
+  }
+
+  async createListing(payload, uploadedImageUrl = null, currentUser = null) {
+    const sellerName = payload.sellerName || currentUser?.fullName || 'Isimsiz Ciftci';
+    const sellerPhone = payload.sellerPhone || currentUser?.phone || '05000000000';
+    const userId = currentUser?.id ?? null;
+
+    try {
+      return await this.listingRepository.create({
+        title: payload.title,
+        description: payload.description,
+        price: payload.price,
+        category: payload.category,
+        location: payload.location,
+        sellerName,
+        sellerPhone,
+        imageUrl: uploadedImageUrl,
+        userId,
+      });
+    } catch (err) {
+      if (uploadedImageUrl) {
+        await this.#deleteImageFromDisk(uploadedImageUrl);
+      }
+      throw err;
+    }
+  }
+
+  async updateListing(id, payload, uploadedImageUrl = null, currentUser = null) {
+    const existingListing = await this.listingRepository.findById(id);
+
+    if (!existingListing) {
+      if (uploadedImageUrl) {
+        await this.#deleteImageFromDisk(uploadedImageUrl);
+      }
+      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+    }
+
+    if (currentUser && existingListing.userId) {
+      const isOwner = existingListing.userId === currentUser.id;
+      const isAdmin = currentUser.role === 'admin';
+
+      if (!isOwner && !isAdmin) {
+        if (uploadedImageUrl) {
+          await this.#deleteImageFromDisk(uploadedImageUrl);
+        }
+        throw AppError.forbidden(
+          'Bu ilani guncelleme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici guncelleyebilir).'
+        );
+      }
+    }
+
+    let nextImageUrl = existingListing.imageUrl;
+
+    if (uploadedImageUrl) {
+      nextImageUrl = uploadedImageUrl;
+    } else if (payload.removeImage === true) {
+      nextImageUrl = null;
+    }
+
+    const mergedData = {
+      title: payload.title ?? existingListing.title,
+      description: payload.description ?? existingListing.description,
+      price: payload.price ?? existingListing.price,
+      category: payload.category ?? existingListing.category,
+      location: payload.location ?? existingListing.location,
+      sellerName: payload.sellerName ?? existingListing.sellerName,
+      sellerPhone: payload.sellerPhone ?? existingListing.sellerPhone,
+      status: payload.status ?? existingListing.status,
+      imageUrl: nextImageUrl,
+    };
+
+    let updatedListing;
+
+    try {
+      updatedListing = await this.listingRepository.update(id, mergedData);
+    } catch (err) {
+      if (uploadedImageUrl) {
+        await this.#deleteImageFromDisk(uploadedImageUrl);
+      }
+      throw err;
+    }
+
+    const shouldDeleteOldImage =
+      existingListing.imageUrl &&
+      existingListing.imageUrl !== nextImageUrl;
+
+    if (shouldDeleteOldImage) {
+      await this.#deleteImageFromDisk(existingListing.imageUrl);
+    }
+
+    return updatedListing;
+  }
+
+  async deleteListing(id, currentUser = null) {
+    const existingListing = await this.listingRepository.findById(id);
+
+    if (!existingListing) {
+      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+    }
+
+    if (currentUser && existingListing.userId) {
+      const isOwner = existingListing.userId === currentUser.id;
+      const isAdmin = currentUser.role === 'admin';
+
+      if (!isOwner && !isAdmin) {
+        throw AppError.forbidden(
+          'Bu ilani silme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici silebilir).'
+        );
+      }
+    }
+
+    const isDeleted = await this.listingRepository.deleteById(id);
+
+    if (!isDeleted) {
+      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+    }
+
+    if (existingListing.imageUrl) {
+      await this.#deleteImageFromDisk(existingListing.imageUrl);
+    }
+  }
+
+  async changeListingStatus(id, newStatus, currentUser = null) {
+    const validStatuses = ['active', 'sold', 'passive'];
+    const normalizedStatus = typeof newStatus === 'string' ? newStatus.trim().toLowerCase() : null;
+
+    if (!validStatuses.includes(normalizedStatus)) {
+      throw AppError.badRequest(
+        `Gecersiz ilan durumu: '${newStatus}'. Gecerli durumlar: ${validStatuses.join(', ')}`
+      );
+    }
+
+    const existingListing = await this.listingRepository.findById(id);
+
+    if (!existingListing) {
+      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+    }
+
+    if (currentUser && existingListing.userId) {
+      const isOwner = existingListing.userId === currentUser.id;
+      const isAdmin = currentUser.role === 'admin';
+
+      if (!isOwner && !isAdmin) {
+        throw AppError.forbidden(
+          'Bu ilanin durumunu degistirme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici degistirebilir).'
+        );
+      }
+    }
+
+    return await this.listingRepository.updateStatus(id, normalizedStatus);
+  }
+}
+
