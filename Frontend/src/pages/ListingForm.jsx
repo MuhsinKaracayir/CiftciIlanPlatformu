@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Upload,
   X,
@@ -150,12 +150,15 @@ export const ListingForm = () => {
       clientErrors.push('Konum / Şehir bilgisi en az 2 karakter olmalıdır.');
     }
 
-    if (!formData.sellerName.trim() || formData.sellerName.trim().length < 2) {
-      clientErrors.push('Satıcı adı en az 2 karakter olmalıdır.');
+    const resolvedSellerName = (isEditMode ? formData.sellerName : user?.fullName) || user?.fullName || '';
+    const resolvedSellerPhone = (isEditMode ? formData.sellerPhone : user?.phone) || user?.phone || '';
+
+    if (!resolvedSellerName.trim() || resolvedSellerName.trim().length < 2) {
+      clientErrors.push('İlan oluşturmak için geçerli bir kullanıcı ad-soyad bilgisi bulunamadı.');
     }
 
-    if (!formData.sellerPhone.trim() || formData.sellerPhone.trim().length < 7) {
-      clientErrors.push('Satıcı iletişim telefonu en az 7 karakter olmalıdır (Örn: 05xxxxxxxxx).');
+    if (!resolvedSellerPhone.trim() || resolvedSellerPhone.trim().length < 7) {
+      clientErrors.push('İlan verebilmek için profilinizde kayıtlı geçerli bir telefon numarası bulunmalıdır.');
     }
 
     if (clientErrors.length > 0) {
@@ -174,8 +177,8 @@ export const ListingForm = () => {
     payload.append('price', String(formData.price));
     payload.append('category', formData.category);
     payload.append('location', formData.location.trim());
-    payload.append('sellerName', formData.sellerName.trim());
-    payload.append('sellerPhone', formData.sellerPhone.trim());
+    payload.append('sellerName', resolvedSellerName.trim());
+    payload.append('sellerPhone', resolvedSellerPhone.trim());
 
     if (imageFile) {
       payload.append('image', imageFile);
@@ -344,44 +347,54 @@ export const ListingForm = () => {
             </div>
           </div>
 
-          {/* İletişim Bilgileri (Satıcı Adı ve Telefon) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-rose-50/50 rounded-2xl border border-rose-100">
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                Satıcı Ad Soyad <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                <input
-                  type="text"
-                  name="sellerName"
-                  value={formData.sellerName}
-                  onChange={handleChange}
-                  placeholder="Adınız Soyadınız"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cherry-800 transition"
-                  required
-                />
+          {/* İletişim Bilgileri (Profil Bilgilerinden Otomatik Alınır) */}
+          <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-3">
+              <span className="text-xs font-bold text-stone-800">İletişim Bilgileri (Hesabınızdan Alınmaktadır)</span>
+              <span className="text-[11px] text-stone-500">Alıcılar bu bilgiler üzerinden size ulaşacaktır</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                  <User className="h-4 w-4 text-cherry-800" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] text-stone-400 block font-medium">İlan Sahibi</span>
+                  <span className="font-bold text-stone-800 truncate block">
+                    {(isEditMode ? formData.sellerName : user?.fullName) || user?.fullName || 'Belirtilmedi'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-stone-200">
+                <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                  <Phone className="h-4 w-4 text-cherry-800" />
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[10px] text-stone-400 block font-medium">İletişim Telefonu</span>
+                  <span className="font-bold text-stone-800 truncate block">
+                    {((isEditMode ? formData.sellerPhone : user?.phone) || user?.phone) ? (
+                      ((isEditMode ? formData.sellerPhone : user?.phone) || user?.phone)
+                    ) : (
+                      <span className="text-red-500 font-semibold">Kayıtlı telefon numarası yok</span>
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                İletişim Telefonu <span className="text-red-500">*</span>
-                <span className="font-normal text-stone-400 ml-1">(En az 7 hane)</span>
-              </label>
-              <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
-                <input
-                  type="tel"
-                  name="sellerPhone"
-                  value={formData.sellerPhone}
-                  onChange={handleChange}
-                  placeholder="05xxxxxxxxx"
-                  className="w-full pl-10 pr-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cherry-800 transition"
-                  required
-                />
+            {!(isEditMode ? formData.sellerPhone || user?.phone : user?.phone) && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span>İlan verebilmek için profilinizde kayıtlı bir telefon numarası bulunmalıdır.</span>
+                <Link
+                  to="/profile"
+                  className="font-bold underline text-amber-950 hover:text-black transition flex-shrink-0"
+                >
+                  Profil Sayfasına Git
+                </Link>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Açıklama */}
