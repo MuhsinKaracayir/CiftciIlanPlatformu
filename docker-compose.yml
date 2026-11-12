@@ -1,0 +1,87 @@
+services:
+  # 1. Veritabani (MS SQL Server 2022)
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: farmer_sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Password123"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./Backend/database/init.sql:/database/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Password123' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # 2. Veritabani Tablolari ve Baslangic Verileri Kurulumu
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: farmer_sqlserver_init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    volumes:
+      - ./Backend/database/init.sql:/database/init.sql:ro
+    command: >
+      /bin/bash -c "
+      echo '[Docker Init]: Veritabani baslatildi, tablolar ve baslangic verileri yukleniyor...';
+      /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P 'YourStrong!Password123' -C -i /database/init.sql;
+      echo '[Docker Init]: Veritabani kurulumu basariyla tamamlandi.';
+      "
+
+  # 3. Backend REST API Servisi (Node.js)
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: farmer_backend
+    restart: unless-stopped
+    depends_on:
+      sqlserver-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      CORS_ORIGIN: "*"
+      DB_USER: sa
+      DB_PASSWORD: "YourStrong!Password123"
+      DB_SERVER: sqlserver
+      DB_PORT: 1433
+      DB_NAME: FarmerClassifiedsDb
+      DB_ENCRYPT: "false"
+      DB_TRUST_SERVER_CERTIFICATE: "true"
+      UPLOAD_DIR: uploads
+      JWT_SECRET: ciftci_ilan_platformu_super_secret_jwt_key_2026
+      JWT_EXPIRES_IN: 7d
+    ports:
+      - "3000:3000"
+    volumes:
+      - backend_uploads:/app/uploads
+
+  # 4. Frontend Web Uygulamasi (React + Nginx)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: http://localhost:3000
+    container_name: farmer_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "5173:80"
+      - "80:80"
+
+volumes:
+  mssql_data:
+  backend_uploads:
+
