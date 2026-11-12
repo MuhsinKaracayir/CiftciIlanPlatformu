@@ -120,3 +120,13 @@ BEGIN
 END
 GO
 
+USE FarmerClassifiedsDb;
+
+SELECT 
+    Id, 
+    FullName, 
+    Email, 
+    Phone, 
+    Role, 
+    CreatedAt 
+FROM dbo.Users;
