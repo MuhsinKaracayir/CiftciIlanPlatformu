@@ -47,8 +47,8 @@ export function validateIdParam(req, res, next) {
 
 export async function validateCreateListing(req, res, next) {
   const normalized = normalizeListingBody(req.body);
-  const resolvedSellerName = normalized.sellerName || req.user?.fullName;
-  const resolvedSellerPhone = normalized.sellerPhone || req.user?.phone;
+  const resolvedSellerName = req.user?.fullName || normalized.sellerName;
+  const resolvedSellerPhone = req.user?.phone || normalized.sellerPhone;
   const errors = [];
 
   if (typeof normalized.title !== 'string' || normalized.title.trim().length < 3 || normalized.title.trim().length > 200) {
@@ -77,11 +77,11 @@ export async function validateCreateListing(req, res, next) {
   }
 
   if (!resolvedSellerName || typeof resolvedSellerName !== 'string' || resolvedSellerName.trim().length < 2 || resolvedSellerName.trim().length > 120) {
-    errors.push({ field: 'sellerName', message: 'Satici adi (SellerName) 2 ile 120 karakter arasinda olmalidir.' });
+    errors.push({ field: 'sellerName', message: 'Gecerli bir kullanici ad soyad bilgisi bulunamadi.' });
   }
 
   if (!resolvedSellerPhone || typeof resolvedSellerPhone !== 'string' || resolvedSellerPhone.trim().length < 7 || resolvedSellerPhone.trim().length > 30) {
-    errors.push({ field: 'sellerPhone', message: 'Satici telefonu (SellerPhone) 7 ile 30 karakter arasinda olmalidir.' });
+    errors.push({ field: 'sellerPhone', message: 'Hesabinizda kayitli gecerli bir telefon numarasi bulunamadi. Ilan olusturabilmek icin lutfen profilinizden telefon numaranizi ekleyiniz.' });
   }
 
   if (errors.length > 0) {

@@ -33,6 +33,7 @@ export class AuthService {
       {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         role: user.role,
       },
       this.jwtSecret,
