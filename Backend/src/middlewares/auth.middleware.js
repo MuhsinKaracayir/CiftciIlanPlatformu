@@ -39,6 +39,7 @@ export function createAuthMiddleware({ jwtSecret, userRepository }) {
           id: user.id,
           fullName: user.fullName,
           email: user.email,
+          phone: user.phone,
           role: user.role,
         };
       } else {

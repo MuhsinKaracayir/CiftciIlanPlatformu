@@ -108,8 +108,8 @@ export class ListingService {
   }
 
   async createListing(payload, uploadedImageUrl = null, currentUser = null) {
-    const sellerName = payload.sellerName || currentUser?.fullName || 'Isimsiz Ciftci';
-    const sellerPhone = payload.sellerPhone || currentUser?.phone || '05000000000';
+    const sellerName = currentUser?.fullName || payload.sellerName || 'Isimsiz Ciftci';
+    const sellerPhone = currentUser?.phone || payload.sellerPhone || '05000000000';
     const userId = currentUser?.id ?? null;
 
     try {
