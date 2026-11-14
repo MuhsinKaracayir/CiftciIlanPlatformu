@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return response;
     }
-    throw new Error(response.message || 'Giris yapilamadi.');
+    throw new Error(response.message || 'Giriş yapılamadı.');
   };
 
   const register = async (userDataInput) => {
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       return response;
     }
-    throw new Error(response.message || 'Kayit basarisiz oldu.');
+    throw new Error(response.message || 'Kayıt başarısız oldu.');
   };
 
   const logout = () => {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth bir AuthProvider icinde kullanilmalidir.');
+    throw new Error('useAuth bir AuthProvider içinde kullanılmalıdır.');
   }
   return context;
 };

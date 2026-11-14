@@ -2,7 +2,7 @@ import sql from 'mssql';
 
 export function createDatabasePool(dbConfig) {
   if (!dbConfig) {
-    throw new Error('Veritabani yapilandirmasi (dbConfig) zorunludur.');
+    throw new Error('Veritabanı yapılandırması (dbConfig) zorunludur.');
   }
 
   const pool = new sql.ConnectionPool({

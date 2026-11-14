@@ -2,39 +2,39 @@ import multer from 'multer';
 import { AppError } from '../utils/AppError.js';
 
 export function notFoundHandler(req, res, next) {
-  next(AppError.notFound(`Endpoint bulunamadi: ${req.method} ${req.originalUrl}`));
+  next(AppError.notFound(`Uç nokta bulunamadı: ${req.method} ${req.originalUrl}`));
 }
 
 export function createErrorHandler({ nodeEnv = 'development' } = {}) {
   return (err, req, res, next) => {
     let normalizedError = err;
 
-    // Multer dosya yukleme hatalari
+    // Multer dosya yükleme hataları
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        normalizedError = AppError.badRequest('Yuklenen resim dosyasi maksimum boyutu (5MB) asiyor.');
+        normalizedError = AppError.badRequest('Yüklenen resim dosyası maksimum boyutu (5MB) aşıyor.');
       } else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-        normalizedError = AppError.badRequest('Resim dosyasi "image" alan adiyla gonderilmelidir.');
+        normalizedError = AppError.badRequest('Resim dosyası "image" alan adıyla gönderilmelidir.');
       } else {
-        normalizedError = AppError.badRequest(`Dosya yukleme hatasi: ${err.message}`);
+        normalizedError = AppError.badRequest(`Dosya yükleme hatası: ${err.message}`);
       }
     }
 
-    // Bozuk JSON govdesi hatasi
+    // Bozuk JSON gövdesi hatası
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-      normalizedError = AppError.badRequest('Gecersiz JSON formati.');
+      normalizedError = AppError.badRequest('Geçersiz JSON formatı.');
     }
 
-    // MS SQL baglanti hatalari
+    // MS SQL bağlantı hataları
     if (err?.code === 'ESOCKET' || err?.code === 'ELOGIN' || err?.code === 'ETIMEOUT') {
-      normalizedError = new AppError('Veritabani servisine su anda ulasilamiyor.', 503);
+      normalizedError = new AppError('Veritabanı servisine şu anda ulaşılamıyor.', 503);
     }
 
     const statusCode = normalizedError.statusCode || 500;
     const isOperational = Boolean(normalizedError.isOperational);
 
     if (!isOperational) {
-      console.error('[Beklenmeyen Sunucu Hatasi]:', err);
+      console.error('[Beklenmeyen Sunucu Hatası]:', err);
     }
 
     const responseBody = {
@@ -42,7 +42,7 @@ export function createErrorHandler({ nodeEnv = 'development' } = {}) {
       status: normalizedError.status || 'error',
       message: isOperational || nodeEnv === 'development'
         ? normalizedError.message
-        : 'Sunucu tarafinda beklenmeyen bir hata olustu.',
+        : 'Sunucu tarafında beklenmeyen bir hata oluştu.',
     };
 
     if (normalizedError.details) {

@@ -1,7 +1,7 @@
 export class AuthController {
   constructor(authService) {
     if (!authService) {
-      throw new Error('AuthController icin authService bagimliligi zorunludur.');
+      throw new Error('AuthController için authService bağımlılığı zorunludur.');
     }
     this.authService = authService;
   }
@@ -11,7 +11,7 @@ export class AuthController {
 
     res.status(201).json({
       success: true,
-      message: 'Kullanici kaydi basariyla tamamlandi.',
+      message: 'Kullanıcı kaydı başarıyla tamamlandı.',
       data: result,
     });
   };
@@ -21,7 +21,7 @@ export class AuthController {
 
     res.status(200).json({
       success: true,
-      message: 'Giris basarili.',
+      message: 'Giriş başarılı.',
       data: result,
     });
   };

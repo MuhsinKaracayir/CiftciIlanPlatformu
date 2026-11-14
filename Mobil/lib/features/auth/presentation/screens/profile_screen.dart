@@ -115,14 +115,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
           ),
           content: const Text(
-            'Hesabinizdan cikis yapmak istediginize emin misiniz?',
+            'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
             style: TextStyle(fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text(
-                'Vazgec',
+                'Vazgeç',
                 style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600),
               ),
             ),
@@ -133,7 +133,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('Cikis Yap'),
+              child: const Text('Çıkış Yap'),
             ),
           ],
         );
@@ -158,7 +158,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Cikis Yap',
+            tooltip: 'Çıkış Yap',
             onPressed: _confirmLogout,
           ),
         ],
@@ -209,7 +209,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user?.fullName ?? 'Kullanici',
+                            user?.fullName ?? 'Kullanıcı',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
@@ -258,7 +258,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Ilan Istatistikleri',
+                'İlan İstatistikleri',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -282,19 +282,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       childAspectRatio: 1.6,
                       children: [
                         ProfileStatCard(
-                          label: 'Toplam Ilan',
+                          label: 'Toplam İlan',
                           value: _totalCount.toString(),
                           accentColor: AppColors.primary,
                           icon: Icons.format_list_bulleted_rounded,
                         ),
                         ProfileStatCard(
-                          label: 'Aktif Ilan',
+                          label: 'Aktif İlan',
                           value: _activeCount.toString(),
                           accentColor: AppColors.statusActive,
                           icon: Icons.check_circle_outline_rounded,
                         ),
                         ProfileStatCard(
-                          label: 'Satilan',
+                          label: 'Satılan',
                           value: _soldCount.toString(),
                           accentColor: AppColors.statusSold,
                           icon: Icons.monetization_on_outlined,
@@ -309,7 +309,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
               const SizedBox(height: 24),
               const Text(
-                'Hesap Islemleri',
+                'Hesap İşlemleri',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -333,7 +333,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: const Icon(Icons.list_alt_rounded, color: AppColors.cherry800, size: 20),
                 ),
                 title: const Text(
-                  'Ilanlarimi Yonet',
+                  'İlanlarımı Yönet',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
@@ -355,7 +355,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   child: const Icon(Icons.add_circle_outline_rounded, color: AppColors.cherry800, size: 20),
                 ),
                 title: const Text(
-                  'Yeni Ilan Olustur',
+                  'Yeni İlan Oluştur',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
                 trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),

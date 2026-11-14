@@ -173,7 +173,7 @@ class DioClient {
       final int statusCode = response.statusCode ?? 500;
       final dynamic responseData = response.data;
 
-      String message = 'Beklenmeyen bir hata olustu.';
+      String message = 'Beklenmeyen bir hata oluştu.';
       List<dynamic>? errors;
 
       if (responseData is Map<String, dynamic>) {
@@ -216,7 +216,7 @@ class DioClient {
     }
 
     return AppException(
-      message: error.message ?? 'Bilinmeyen bir ag hatasi olustu.',
+      message: error.message ?? 'Bilinmeyen bir ağ hatası oluştu.',
     );
   }
 }

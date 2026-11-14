@@ -1,7 +1,7 @@
 export class ListingController {
   constructor(listingService) {
     if (!listingService) {
-      throw new Error('ListingController icin listingService bagimliligi zorunludur.');
+      throw new Error('ListingController için listingService bağımlılığı zorunludur.');
     }
     this.listingService = listingService;
   }
@@ -32,7 +32,7 @@ export class ListingController {
 
     res.status(201).json({
       success: true,
-      message: 'Ilan basariyla olusturuldu.',
+      message: 'İlan başarıyla oluşturuldu.',
       data: createdListing,
     });
   };
@@ -44,7 +44,7 @@ export class ListingController {
 
     res.status(200).json({
       success: true,
-      message: 'Ilan basariyla guncellendi.',
+      message: 'İlan başarıyla güncellendi.',
       data: updatedListing,
     });
   };
@@ -55,7 +55,7 @@ export class ListingController {
 
     res.status(200).json({
       success: true,
-      message: 'Ilan ve iliskili resim dosyasi basariyla silindi.',
+      message: 'İlan ve ilişkili resim dosyası başarıyla silindi.',
     });
   };
 
@@ -65,7 +65,7 @@ export class ListingController {
 
     res.status(200).json({
       success: true,
-      message: `Ilan durumu basariyla '${updatedListing.status}' olarak guncellendi.`,
+      message: `İlan durumu başarıyla '${updatedListing.status}' olarak güncellendi.`,
       data: updatedListing,
     });
   };
