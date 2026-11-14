@@ -10,7 +10,7 @@ async function cleanupTempUploadedFile(file) {
     await fs.unlink(file.path);
   } catch (err) {
     if (err.code !== 'ENOENT') {
-      console.error('[Validation Cleanup Hatasi]: Gecici resim silinemedi:', err.message);
+      console.error('[Validation Cleanup Hatası]: Geçici resim silinemedi:', err.message);
     }
   }
 }
@@ -33,13 +33,13 @@ export function validateIdParam(req, res, next) {
   const rawId = req.params.id;
 
   if (!/^\d+$/.test(rawId)) {
-    return next(AppError.badRequest('Gecersiz ilan ID parametresi; pozitif tam sayi olmalidir.'));
+    return next(AppError.badRequest('Geçersiz ilan ID parametresi; pozitif tam sayı olmalıdır.'));
   }
 
   const parsedId = Number(rawId);
 
   if (!Number.isSafeInteger(parsedId) || parsedId <= 0) {
-    return next(AppError.badRequest('Gecersiz ilan ID parametresi; pozitif tam sayi olmalidir.'));
+    return next(AppError.badRequest('Geçersiz ilan ID parametresi; pozitif tam sayı olmalıdır.'));
   }
 
   return next();
@@ -52,11 +52,11 @@ export async function validateCreateListing(req, res, next) {
   const errors = [];
 
   if (typeof normalized.title !== 'string' || normalized.title.trim().length < 3 || normalized.title.trim().length > 200) {
-    errors.push({ field: 'title', message: 'Ilan basligi (Title) 3 ile 200 karakter arasinda olmalidir.' });
+    errors.push({ field: 'title', message: 'İlan başlığı (Title) 3 ile 200 karakter arasında olmalıdır.' });
   }
 
   if (typeof normalized.description !== 'string' || normalized.description.trim().length < 10) {
-    errors.push({ field: 'description', message: 'Ilan aciklamasi (Description) en az 10 karakter olmalidir.' });
+    errors.push({ field: 'description', message: 'İlan açıklaması (Description) en az 10 karakter olmalıdır.' });
   }
 
   const rawPrice = normalized.price;
@@ -65,28 +65,28 @@ export async function validateCreateListing(req, res, next) {
     : NaN;
 
   if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-    errors.push({ field: 'price', message: 'Fiyat (Price) 0 veya daha buyuk gecerli bir sayi olmalidir.' });
+    errors.push({ field: 'price', message: 'Fiyat (Price) 0 veya daha büyük geçerli bir sayı olmalıdır.' });
   }
 
   if (typeof normalized.category !== 'string' || normalized.category.trim().length < 2 || normalized.category.trim().length > 100) {
-    errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasinda olmalidir.' });
+    errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasında olmalıdır.' });
   }
 
   if (typeof normalized.location !== 'string' || normalized.location.trim().length < 2 || normalized.location.trim().length > 150) {
-    errors.push({ field: 'location', message: 'Konum (Location) 2 ile 150 karakter arasinda olmalidir.' });
+    errors.push({ field: 'location', message: 'Konum (Location) 2 ile 150 karakter arasında olmalıdır.' });
   }
 
   if (!resolvedSellerName || typeof resolvedSellerName !== 'string' || resolvedSellerName.trim().length < 2 || resolvedSellerName.trim().length > 120) {
-    errors.push({ field: 'sellerName', message: 'Gecerli bir kullanici ad soyad bilgisi bulunamadi.' });
+    errors.push({ field: 'sellerName', message: 'Geçerli bir kullanıcı ad soyad bilgisi bulunamadı.' });
   }
 
   if (!resolvedSellerPhone || typeof resolvedSellerPhone !== 'string' || resolvedSellerPhone.trim().length < 7 || resolvedSellerPhone.trim().length > 30) {
-    errors.push({ field: 'sellerPhone', message: 'Hesabinizda kayitli gecerli bir telefon numarasi bulunamadi. Ilan olusturabilmek icin lutfen profilinizden telefon numaranizi ekleyiniz.' });
+    errors.push({ field: 'sellerPhone', message: 'Hesabınızda kayıtlı geçerli bir telefon numarası bulunamadı. İlan oluşturabilmek için lütfen profilinizden telefon numaranızı ekleyiniz.' });
   }
 
   if (errors.length > 0) {
     await cleanupTempUploadedFile(req.file);
-    return next(AppError.badRequest('Ilan olusturma dogrulama hatasi.', errors));
+    return next(AppError.badRequest('İlan oluşturma doğrulama hatası.', errors));
   }
 
   req.body = {
@@ -122,7 +122,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (!hasAnyBodyField && !hasUploadedFile) {
     return next(
-      AppError.badRequest('Guncelleme icin en az bir alan veya yeni bir ilan resmi gonderilmelidir.')
+      AppError.badRequest('Güncelleme için en az bir alan veya yeni bir ilan resmi gönderilmelidir.')
     );
   }
 
@@ -131,7 +131,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.title !== undefined) {
     if (typeof normalized.title !== 'string' || normalized.title.trim().length < 3 || normalized.title.trim().length > 200) {
-      errors.push({ field: 'title', message: 'Ilan basligi (Title) 3 ile 200 karakter arasinda olmalidir.' });
+      errors.push({ field: 'title', message: 'İlan başlığı (Title) 3 ile 200 karakter arasında olmalıdır.' });
     } else {
       sanitized.title = normalized.title.trim();
     }
@@ -139,7 +139,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.description !== undefined) {
     if (typeof normalized.description !== 'string' || normalized.description.trim().length < 10) {
-      errors.push({ field: 'description', message: 'Ilan aciklamasi (Description) en az 10 karakter olmalidir.' });
+      errors.push({ field: 'description', message: 'İlan açıklaması (Description) en az 10 karakter olmalıdır.' });
     } else {
       sanitized.description = normalized.description.trim();
     }
@@ -148,7 +148,7 @@ export async function validateUpdateListing(req, res, next) {
   if (normalized.price !== undefined) {
     const parsedPrice = String(normalized.price).trim() !== '' ? Number(normalized.price) : NaN;
     if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      errors.push({ field: 'price', message: 'Fiyat (Price) 0 veya daha buyuk gecerli bir sayi olmalidir.' });
+      errors.push({ field: 'price', message: 'Fiyat (Price) 0 veya daha büyük geçerli bir sayı olmalıdır.' });
     } else {
       sanitized.price = parsedPrice;
     }
@@ -156,7 +156,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.category !== undefined) {
     if (typeof normalized.category !== 'string' || normalized.category.trim().length < 2 || normalized.category.trim().length > 100) {
-      errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasinda olmalidir.' });
+      errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasında olmalıdır.' });
     } else {
       sanitized.category = normalized.category.trim();
     }
@@ -164,7 +164,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.location !== undefined) {
     if (typeof normalized.location !== 'string' || normalized.location.trim().length < 2 || normalized.location.trim().length > 150) {
-      errors.push({ field: 'location', message: 'Konum (Location) 2 ile 150 karakter arasinda olmalidir.' });
+      errors.push({ field: 'location', message: 'Konum (Location) 2 ile 150 karakter arasında olmalıdır.' });
     } else {
       sanitized.location = normalized.location.trim();
     }
@@ -172,7 +172,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.sellerName !== undefined) {
     if (typeof normalized.sellerName !== 'string' || normalized.sellerName.trim().length < 2 || normalized.sellerName.trim().length > 120) {
-      errors.push({ field: 'sellerName', message: 'Satici adi (SellerName) 2 ile 120 karakter arasinda olmalidir.' });
+      errors.push({ field: 'sellerName', message: 'Satıcı adı (SellerName) 2 ile 120 karakter arasında olmalıdır.' });
     } else {
       sanitized.sellerName = normalized.sellerName.trim();
     }
@@ -180,7 +180,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (normalized.sellerPhone !== undefined) {
     if (typeof normalized.sellerPhone !== 'string' || normalized.sellerPhone.trim().length < 7 || normalized.sellerPhone.trim().length > 30) {
-      errors.push({ field: 'sellerPhone', message: 'Satici telefonu (SellerPhone) 7 ile 30 karakter arasinda olmalidir.' });
+      errors.push({ field: 'sellerPhone', message: 'Satıcı telefonu (SellerPhone) 7 ile 30 karakter arasında olmalıdır.' });
     } else {
       sanitized.sellerPhone = normalized.sellerPhone.trim();
     }
@@ -190,7 +190,7 @@ export async function validateUpdateListing(req, res, next) {
     const validStatuses = ['active', 'sold', 'passive'];
     const cleanStatus = typeof normalized.status === 'string' ? normalized.status.trim().toLowerCase() : '';
     if (!validStatuses.includes(cleanStatus)) {
-      errors.push({ field: 'status', message: `Ilan durumu (Status) yalnizca 'active', 'sold' veya 'passive' olabilir.` });
+      errors.push({ field: 'status', message: `İlan durumu (Status) yalnızca 'active', 'sold' veya 'passive' olabilir.` });
     } else {
       sanitized.status = cleanStatus;
     }
@@ -202,7 +202,7 @@ export async function validateUpdateListing(req, res, next) {
 
   if (errors.length > 0) {
     await cleanupTempUploadedFile(req.file);
-    return next(AppError.badRequest('Ilan guncelleme dogrulama hatasi.', errors));
+    return next(AppError.badRequest('İlan güncelleme doğrulama hatası.', errors));
   }
 
   req.body = sanitized;
@@ -216,7 +216,7 @@ export function validateChangeStatus(req, res, next) {
   if (typeof rawStatus !== 'string' || !validStatuses.includes(rawStatus.trim().toLowerCase())) {
     return next(
       AppError.badRequest(
-        `Gecersiz veya eksik ilan durumu. 'status' alani 'active', 'sold' veya 'passive' olmalidir.`
+        `Geçersiz veya eksik ilan durumu. 'status' alanı 'active', 'sold' veya 'passive' olmalıdır.`
       )
     );
   }

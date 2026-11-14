@@ -72,7 +72,7 @@ BEGIN
 END
 GO
 
--- Ornek baslangic ilanlari
+-- Örnek başlangıç ilanları
 IF NOT EXISTS (SELECT 1 FROM dbo.Listings)
 BEGIN
     INSERT INTO dbo.Listings (
@@ -91,8 +91,8 @@ BEGIN
             N'[Örnek / Sahte İlan] Satılık 5 Ton Organik Buğday',
             N'Bu bir deneme ve test amaçlı örnek ilandır. Sistemi test etmek amacıyla ilan üzerinde düzenleme ve silme işlemlerini deneyimleyebilirsiniz.',
             62500.00,
-            N'Tahıl',
-            N'Konya / Çumra',
+            N'Tarım Ürünleri',
+            N'Bilecik / Yenipazar',
             N'Örnek Satıcı (Test)',
             N'05550000001',
             NULL
@@ -102,7 +102,7 @@ BEGIN
             N'Bu bir deneme ve test amaçlı örnek ilandır. 1200 saatte temsili tarla traktörü ilanı.',
             1450000.00,
             N'Traktör',
-            N'Adana / Ceyhan',
+            N'Bilecik / Yenipazar',
             N'Örnek Satıcı (Test)',
             N'05550000002',
             NULL
@@ -112,7 +112,7 @@ BEGIN
             N'Bu bir deneme ve test amaçlı örnek ilandır. Sağlık kontrolleri ve aşıları tam temsili damızlık düve ilanı.',
             135000.00,
             N'Hayvancılık',
-            N'Kars / Merkez',
+            N'Bilecik / Yenipazar',
             N'Örnek Satıcı (Test)',
             N'05550000003',
             NULL
@@ -121,6 +121,11 @@ END
 GO
 
 USE FarmerClassifiedsDb;
+GO
+
+UPDATE dbo.Listings
+SET Location = N'Bilecik / Yenipazar';
+GO
 
 SELECT 
     Id, 

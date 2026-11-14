@@ -27,6 +27,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _fullNameController.dispose();
     _emailController.dispose();
@@ -41,8 +49,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     final bool success = await ref.read(authControllerProvider.notifier).register(
-          fullName: _fullNameController.text,
-          email: _emailController.text,
+          fullName: _fullNameController.text.trim(),
+          email: _emailController.text.trim(),
           password: _passwordController.text,
           phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
         );
@@ -82,7 +90,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Yeni Hesap Olusturun',
+                    'Yeni Hesap Oluşturun',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -92,7 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Urunlerinizi pazara sunmak icin aramiza katilin',
+                    'Ürünlerinizi pazara sunmak için aramıza katılın',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -153,11 +161,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           AuthTextField(
                             controller: _fullNameController,
                             label: 'Ad Soyad',
-                            hintText: 'Ahmet Yilmaz',
+                            hintText: 'Ahmet Yılmaz',
                             prefixIcon: Icons.person_outline_rounded,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Lutfen adinizi ve soyadinizi giriniz.';
+                                return 'Lütfen adınızı ve soyadınızı giriniz.';
                               }
                               return null;
                             },
@@ -171,10 +179,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Lutfen e-posta adresinizi giriniz.';
+                                return 'Lütfen e-posta adresinizi giriniz.';
                               }
-                              if (!value.contains('@') || !value.contains('.')) {
-                                return 'Gecerli bir e-posta adresi giriniz.';
+                              final String trimmed = value.trim();
+                              final RegExp emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+                              if (!emailRegex.hasMatch(trimmed)) {
+                                return 'Geçerli bir e-posta adresi giriniz.';
                               }
                               return null;
                             },
@@ -182,7 +192,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const SizedBox(height: 16),
                           AuthTextField(
                             controller: _phoneController,
-                            label: 'Telefon Numarasi (Istege Bagli)',
+                            label: 'Telefon Numarası (İsteğe Bağlı)',
                             hintText: '0555 123 4567',
                             prefixIcon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
@@ -190,7 +200,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           const SizedBox(height: 16),
                           AuthTextField(
                             controller: _passwordController,
-                            label: 'Sifre (En az 6 karakter)',
+                            label: 'Şifre (En az 6 karakter)',
                             hintText: '••••••••',
                             prefixIcon: Icons.lock_outline_rounded,
                             obscureText: _obscurePassword,
@@ -211,10 +221,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Lutfen bir sifre belirleyiniz.';
+                                return 'Lütfen bir şifre belirleyiniz.';
                               }
                               if (value.length < 6) {
-                                return 'Sifreniz en az 6 karakterden olusmalidir.';
+                                return 'Şifreniz en az 6 karakterden oluşmalıdır.';
                               }
                               return null;
                             },
@@ -246,7 +256,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                       Icon(Icons.person_add_alt_1_rounded, size: 18),
                                       SizedBox(width: 8),
                                       Text(
-                                        'Kayit Ol',
+                                        'Kayıt Ol',
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
@@ -264,7 +274,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        'Zaten bir hesabiniz var mi? ',
+                        'Zaten bir hesabınız var mı? ',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -273,7 +283,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       GestureDetector(
                         onTap: widget.onNavigateToLogin,
                         child: const Text(
-                          'Giris Yapin',
+                          'Giriş Yapın',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,

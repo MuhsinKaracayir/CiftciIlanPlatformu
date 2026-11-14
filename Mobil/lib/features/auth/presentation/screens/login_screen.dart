@@ -25,6 +25,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _obscurePassword = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(authControllerProvider.notifier).clearError();
+    });
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -37,7 +45,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     final bool success = await ref.read(authControllerProvider.notifier).login(
-          email: _emailController.text,
+          email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
@@ -76,7 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Hesabiniza Giris Yapin',
+                    'Hesabınıza Giriş Yapın',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -86,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Tarim Pazar Yeri ilanlarinizi yonetmek icin giris yapin',
+                    'Tarım Pazar Yeri ilanlarınızı yönetmek için giriş yapın',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13,
@@ -152,10 +160,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
-                                return 'Lutfen e-posta adresinizi giriniz.';
+                                return 'Lütfen e-posta adresinizi giriniz.';
                               }
-                              if (!value.contains('@') || !value.contains('.')) {
-                                return 'Gecerli bir e-posta adresi giriniz.';
+                              final String trimmed = value.trim();
+                              final RegExp emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+                              if (!emailRegex.hasMatch(trimmed)) {
+                                return 'Geçerli bir e-posta adresi giriniz.';
                               }
                               return null;
                             },
@@ -163,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           const SizedBox(height: 16),
                           AuthTextField(
                             controller: _passwordController,
-                            label: 'Sifre',
+                            label: 'Şifre',
                             hintText: '••••••••',
                             prefixIcon: Icons.lock_outline_rounded,
                             obscureText: _obscurePassword,
@@ -184,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Lutfen sifrenizi giriniz.';
+                                return 'Lütfen şifrenizi giriniz.';
                               }
                               return null;
                             },
@@ -216,7 +226,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       Icon(Icons.login_rounded, size: 18),
                                       SizedBox(width: 8),
                                       Text(
-                                        'Giris Yap',
+                                        'Giriş Yap',
                                         style: TextStyle(
                                           fontSize: 15,
                                           fontWeight: FontWeight.w700,
@@ -234,7 +244,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        'Henuz bir hesabiniz yok mu? ',
+                        'Henüz bir hesabınız yok mu? ',
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
@@ -243,7 +253,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       GestureDetector(
                         onTap: widget.onNavigateToRegister,
                         child: const Text(
-                          'Hemen Uye Olun',
+                          'Hemen Üye Olun',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,

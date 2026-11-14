@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError.js';
 export class AuthService {
   constructor(userRepository, jwtConfig = {}) {
     if (!userRepository) {
-      throw new Error('AuthService icin userRepository bagimliligi zorunludur.');
+      throw new Error('AuthService için userRepository bağımlılığı zorunludur.');
     }
     this.userRepository = userRepository;
     this.jwtSecret = jwtConfig.secret || 'default_jwt_secret';
@@ -48,7 +48,7 @@ export class AuthService {
     const isEmailTaken = await this.userRepository.existsByEmail(trimmedEmail);
 
     if (isEmailTaken) {
-      throw AppError.conflict('Bu e-posta adresi ile zaten kayitli bir hesap bulunmaktadir.');
+      throw AppError.conflict('Bu e-posta adresi ile zaten kayıtlı bir hesap bulunmaktadır.');
     }
 
     const saltRounds = 10;
@@ -75,13 +75,13 @@ export class AuthService {
     const user = await this.userRepository.findByEmail(trimmedEmail);
 
     if (!user) {
-      throw AppError.unauthorized('Gecersiz e-posta adresi veya sifre.');
+      throw AppError.unauthorized('Geçersiz e-posta adresi veya şifre.');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordValid) {
-      throw AppError.unauthorized('Gecersiz e-posta adresi veya sifre.');
+      throw AppError.unauthorized('Geçersiz e-posta adresi veya şifre.');
     }
 
     const token = this.#generateToken(user);
@@ -96,7 +96,7 @@ export class AuthService {
     const user = await this.userRepository.findById(userId);
 
     if (!user) {
-      throw AppError.notFound('Kullanici hesabi bulunamadi.');
+      throw AppError.notFound('Kullanıcı hesabı bulunamadı.');
     }
 
     return this.#formatSafeUser(user);

@@ -189,7 +189,7 @@ class AuthController extends StateNotifier<AuthState> {
     state = state.copyWith(
       status: AuthStatus.unauthenticated,
       clearUser: true,
-      errorMessage: 'Oturum sureniz doldu. Lutfen tekrar giris yapin.',
+      errorMessage: 'Oturum süreniz doldu. Lütfen tekrar giriş yapın.',
     );
   }
 

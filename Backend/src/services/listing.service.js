@@ -5,7 +5,7 @@ import { AppError } from '../utils/AppError.js';
 export class ListingService {
   constructor(listingRepository, uploadsDir = path.resolve(process.cwd(), 'uploads')) {
     if (!listingRepository) {
-      throw new Error('ListingService icin listingRepository bagimliligi zorunludur.');
+      throw new Error('ListingService için listingRepository bağımlılığı zorunludur.');
     }
     this.listingRepository = listingRepository;
     this.uploadsDir = uploadsDir;
@@ -31,7 +31,7 @@ export class ListingService {
       await fs.unlink(absoluteFilePath);
     } catch (err) {
       if (err.code !== 'ENOENT') {
-        console.error(`[ListingService]: Eski resim dosyasi silinemedi (${safeFileName}):`, err.message);
+        console.error(`[ListingService]: Eski resim dosyası silinemedi (${safeFileName}):`, err.message);
       }
     }
   }
@@ -70,7 +70,7 @@ export class ListingService {
         status = trimmedStatus;
       }
     } else {
-      // Varsayilan olarak yalnizca aktif ilanlar gosterilir
+      // Varsayılan olarak yalnızca aktif ilanlar gösterilir
       status = 'active';
     }
 
@@ -101,14 +101,14 @@ export class ListingService {
     const listing = await this.listingRepository.findById(id);
 
     if (!listing) {
-      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+      throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
     return listing;
   }
 
   async createListing(payload, uploadedImageUrl = null, currentUser = null) {
-    const sellerName = currentUser?.fullName || payload.sellerName || 'Isimsiz Ciftci';
+    const sellerName = currentUser?.fullName || payload.sellerName || 'İsimsiz Çiftçi';
     const sellerPhone = currentUser?.phone || payload.sellerPhone || '05000000000';
     const userId = currentUser?.id ?? null;
 
@@ -139,7 +139,7 @@ export class ListingService {
       if (uploadedImageUrl) {
         await this.#deleteImageFromDisk(uploadedImageUrl);
       }
-      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+      throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
     if (currentUser && existingListing.userId) {
@@ -151,7 +151,7 @@ export class ListingService {
           await this.#deleteImageFromDisk(uploadedImageUrl);
         }
         throw AppError.forbidden(
-          'Bu ilani guncelleme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici guncelleyebilir).'
+          'Bu ilanı güncelleme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici güncelleyebilir).'
         );
       }
     }
@@ -202,7 +202,7 @@ export class ListingService {
     const existingListing = await this.listingRepository.findById(id);
 
     if (!existingListing) {
-      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+      throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
     if (currentUser && existingListing.userId) {
@@ -211,7 +211,7 @@ export class ListingService {
 
       if (!isOwner && !isAdmin) {
         throw AppError.forbidden(
-          'Bu ilani silme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici silebilir).'
+          'Bu ilanı silme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici silebilir).'
         );
       }
     }
@@ -219,7 +219,7 @@ export class ListingService {
     const isDeleted = await this.listingRepository.deleteById(id);
 
     if (!isDeleted) {
-      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+      throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
     if (existingListing.imageUrl) {
@@ -233,14 +233,14 @@ export class ListingService {
 
     if (!validStatuses.includes(normalizedStatus)) {
       throw AppError.badRequest(
-        `Gecersiz ilan durumu: '${newStatus}'. Gecerli durumlar: ${validStatuses.join(', ')}`
+        `Geçersiz ilan durumu: '${newStatus}'. Geçerli durumlar: ${validStatuses.join(', ')}`
       );
     }
 
     const existingListing = await this.listingRepository.findById(id);
 
     if (!existingListing) {
-      throw AppError.notFound(`ID degeri ${id} olan ilan bulunamadi.`);
+      throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
     if (currentUser && existingListing.userId) {
@@ -249,7 +249,7 @@ export class ListingService {
 
       if (!isOwner && !isAdmin) {
         throw AppError.forbidden(
-          'Bu ilanin durumunu degistirme yetkiniz bulunmamaktadir (Yalnizca ilan sahibi veya yonetici degistirebilir).'
+          'Bu ilanın durumunu değiştirme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici değiştirebilir).'
         );
       }
     }

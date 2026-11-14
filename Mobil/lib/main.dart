@@ -20,7 +20,7 @@ class CiftciMobilApp extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
-      title: 'Ciftci Pazari',
+      title: 'Çiftçi Pazarı',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: router,

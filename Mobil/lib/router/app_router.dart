@@ -5,6 +5,11 @@ import 'package:ciftci_mobil/features/auth/presentation/providers/auth_provider.
 import 'package:ciftci_mobil/features/auth/presentation/screens/login_screen.dart';
 import 'package:ciftci_mobil/features/auth/presentation/screens/profile_screen.dart';
 import 'package:ciftci_mobil/features/auth/presentation/screens/register_screen.dart';
+import 'package:ciftci_mobil/features/listings/data/models/listing_model.dart';
+import 'package:ciftci_mobil/features/listings/presentation/screens/create_listing_screen.dart';
+import 'package:ciftci_mobil/features/listings/presentation/screens/home_screen.dart';
+import 'package:ciftci_mobil/features/listings/presentation/screens/listing_detail_screen.dart';
+import 'package:ciftci_mobil/features/listings/presentation/screens/my_listings_screen.dart';
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
@@ -21,18 +26,18 @@ class RouterNotifier extends ChangeNotifier {
   }
 }
 
-final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+final Provider<RouterNotifier> routerNotifierProvider = Provider<RouterNotifier>((ref) {
   return RouterNotifier(ref);
 });
 
-final goRouterProvider = Provider<GoRouter>((ref) {
+final Provider<GoRouter> goRouterProvider = Provider<GoRouter>((ref) {
   final routerNotifier = ref.watch(routerNotifierProvider);
-  final authState = ref.watch(authControllerProvider);
 
   return GoRouter(
-    initialLocation: '/profile',
+    initialLocation: '/',
     refreshListenable: routerNotifier,
     redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authControllerProvider);
       final bool isAuthenticated = authState.status == AuthStatus.authenticated;
       final bool isAuthChecking =
           authState.status == AuthStatus.initial || authState.status == AuthStatus.loading;
@@ -40,31 +45,43 @@ final goRouterProvider = Provider<GoRouter>((ref) {
 
       final bool isGoingToLogin = currentLocation == '/login';
       final bool isGoingToRegister = currentLocation == '/register';
+      final bool isGoingToProfile = currentLocation == '/profile';
+      final bool isGoingToCreateListing = currentLocation == '/create-listing';
+      final bool isGoingToMyListings = currentLocation == '/my-listings';
 
       if (isAuthChecking) {
         return null;
       }
 
-      if (!isAuthenticated) {
-        if (isGoingToLogin || isGoingToRegister) {
-          return null;
-        }
+      if (!isAuthenticated && (isGoingToProfile || isGoingToCreateListing || isGoingToMyListings)) {
         return '/login';
       }
 
-      if (isGoingToLogin || isGoingToRegister) {
-        return '/profile';
+      if (isAuthenticated && (isGoingToLogin || isGoingToRegister)) {
+        return '/';
       }
 
       return null;
     },
     routes: [
       GoRoute(
+        path: '/',
+        name: 'home',
+        builder: (context, state) => HomeScreen(
+          onNavigateToProfile: () {
+            context.push('/profile');
+          },
+          onNavigateToCreateListing: () {
+            context.push('/create-listing');
+          },
+        ),
+      ),
+      GoRoute(
         path: '/login',
         name: 'login',
         builder: (context, state) => LoginScreen(
           onNavigateToRegister: () => context.go('/register'),
-          onLoginSuccess: () => context.go('/profile'),
+          onLoginSuccess: () => context.go('/'),
         ),
       ),
       GoRoute(
@@ -72,7 +89,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'register',
         builder: (context, state) => RegisterScreen(
           onNavigateToLogin: () => context.go('/login'),
-          onRegisterSuccess: () => context.go('/profile'),
+          onRegisterSuccess: () => context.go('/'),
         ),
       ),
       GoRoute(
@@ -80,21 +97,36 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: 'profile',
         builder: (context, state) => ProfileScreen(
           onNavigateToMyListings: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Ilanlar modulu bir sonraki adimda eklenecektir.'),
-              ),
-            );
+            context.push('/my-listings');
           },
           onNavigateToCreateListing: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Ilan ekleme ekrani bir sonraki adimda eklenecektir.'),
-              ),
-            );
+            context.push('/create-listing');
           },
-          onLogoutCompleted: () => context.go('/login'),
+          onLogoutCompleted: () => context.go('/'),
         ),
+      ),
+      GoRoute(
+        path: '/my-listings',
+        name: 'my_listings',
+        builder: (context, state) => const MyListingsScreen(),
+      ),
+      GoRoute(
+        path: '/create-listing',
+        name: 'create_listing',
+        builder: (context, state) => const CreateListingScreen(),
+      ),
+      GoRoute(
+        path: '/listings/:id',
+        name: 'listing_detail',
+        builder: (context, state) {
+          final idString = state.pathParameters['id'] ?? '0';
+          final int id = int.tryParse(idString) ?? 0;
+          final listing = state.extra is ListingModel ? state.extra as ListingModel : null;
+          return ListingDetailScreen(
+            listingId: id,
+            initialListing: listing,
+          );
+        },
       ),
     ],
   );
