@@ -20,6 +20,7 @@ function normalizeListingBody(body = {}) {
     title: body.title ?? body.Title,
     description: body.description ?? body.Description,
     price: body.price ?? body.Price,
+    categoryId: body.categoryId ?? body.CategoryId ?? body.category_id,
     category: body.category ?? body.Category,
     location: body.location ?? body.Location,
     sellerName: body.sellerName ?? body.SellerName,
@@ -33,13 +34,13 @@ export function validateIdParam(req, res, next) {
   const rawId = req.params.id;
 
   if (!/^\d+$/.test(rawId)) {
-    return next(AppError.badRequest('Geçersiz ilan ID parametresi; pozitif tam sayı olmalıdır.'));
+    return next(AppError.badRequest('Geçersiz ID parametresi; pozitif tam sayı olmalıdır.'));
   }
 
   const parsedId = Number(rawId);
 
   if (!Number.isSafeInteger(parsedId) || parsedId <= 0) {
-    return next(AppError.badRequest('Geçersiz ilan ID parametresi; pozitif tam sayı olmalıdır.'));
+    return next(AppError.badRequest('Geçersiz ID parametresi; pozitif tam sayı olmalıdır.'));
   }
 
   return next();
@@ -68,8 +69,21 @@ export async function validateCreateListing(req, res, next) {
     errors.push({ field: 'price', message: 'Fiyat (Price) 0 veya daha büyük geçerli bir sayı olmalıdır.' });
   }
 
-  if (typeof normalized.category !== 'string' || normalized.category.trim().length < 2 || normalized.category.trim().length > 100) {
-    errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasında olmalıdır.' });
+  // Kategori doğrulaması: Sayısal categoryId veya metin olarak geçerli bir category adı kabul edilir
+  const rawCategoryId = normalized.categoryId;
+  const parsedCategoryId = rawCategoryId !== undefined && rawCategoryId !== null && String(rawCategoryId).trim() !== ''
+    ? Number(rawCategoryId)
+    : NaN;
+  const hasValidCategoryId = Number.isInteger(parsedCategoryId) && parsedCategoryId > 0;
+
+  const rawCategoryName = typeof normalized.category === 'string' ? normalized.category.trim() : null;
+  const hasValidCategoryName = Boolean(rawCategoryName && rawCategoryName.length >= 2 && rawCategoryName.length <= 100);
+
+  if (!hasValidCategoryId && !hasValidCategoryName) {
+    errors.push({
+      field: 'categoryId',
+      message: 'Geçerli bir kategori belirtilmelidir (sayısal categoryId veya geçerli bir kategori adı).',
+    });
   }
 
   if (typeof normalized.location !== 'string' || normalized.location.trim().length < 2 || normalized.location.trim().length > 150) {
@@ -93,7 +107,8 @@ export async function validateCreateListing(req, res, next) {
     title: normalized.title.trim(),
     description: normalized.description.trim(),
     price: parsedPrice,
-    category: normalized.category.trim(),
+    categoryId: hasValidCategoryId ? parsedCategoryId : null,
+    category: hasValidCategoryName ? rawCategoryName : null,
     location: normalized.location.trim(),
     sellerName: resolvedSellerName.trim(),
     sellerPhone: resolvedSellerPhone.trim(),
@@ -102,13 +117,13 @@ export async function validateCreateListing(req, res, next) {
   return next();
 }
 
-
 export async function validateUpdateListing(req, res, next) {
   const normalized = normalizeListingBody(req.body);
   const updatableKeys = [
     'title',
     'description',
     'price',
+    'categoryId',
     'category',
     'location',
     'sellerName',
@@ -154,11 +169,25 @@ export async function validateUpdateListing(req, res, next) {
     }
   }
 
-  if (normalized.category !== undefined) {
-    if (typeof normalized.category !== 'string' || normalized.category.trim().length < 2 || normalized.category.trim().length > 100) {
-      errors.push({ field: 'category', message: 'Kategori (Category) 2 ile 100 karakter arasında olmalıdır.' });
+  if (normalized.categoryId !== undefined || normalized.category !== undefined) {
+    const rawCatId = normalized.categoryId;
+    const parsedCatId = rawCatId !== undefined && rawCatId !== null && String(rawCatId).trim() !== ''
+      ? Number(rawCatId)
+      : NaN;
+    const isValidId = Number.isInteger(parsedCatId) && parsedCatId > 0;
+
+    const rawCatName = typeof normalized.category === 'string' ? normalized.category.trim() : null;
+    const isValidName = Boolean(rawCatName && rawCatName.length >= 2 && rawCatName.length <= 100);
+
+    if (isValidId) {
+      sanitized.categoryId = parsedCatId;
+    } else if (isValidName) {
+      sanitized.category = rawCatName;
     } else {
-      sanitized.category = normalized.category.trim();
+      errors.push({
+        field: 'categoryId',
+        message: 'Kategori bilgisi geçerli bir sayısal ID veya geçerli bir kategori adı olmalıdır.',
+      });
     }
   }
 
@@ -224,4 +253,3 @@ export function validateChangeStatus(req, res, next) {
   req.body.status = rawStatus.trim().toLowerCase();
   return next();
 }
-

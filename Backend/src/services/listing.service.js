@@ -3,11 +3,16 @@ import path from 'node:path';
 import { AppError } from '../utils/AppError.js';
 
 export class ListingService {
-  constructor(listingRepository, uploadsDir = path.resolve(process.cwd(), 'uploads')) {
+  constructor(
+    listingRepository,
+    categoryRepository = null,
+    uploadsDir = path.resolve(process.cwd(), 'uploads')
+  ) {
     if (!listingRepository) {
       throw new Error('ListingService için listingRepository bağımlılığı zorunludur.');
     }
     this.listingRepository = listingRepository;
+    this.categoryRepository = categoryRepository;
     this.uploadsDir = uploadsDir;
   }
 
@@ -54,6 +59,103 @@ export class ListingService {
     }
   }
 
+  async #resolveCategoryId(categoryId, categoryName) {
+    // 1. Sayısal categoryId doğrudan verilmişse
+    if (categoryId !== undefined && categoryId !== null && categoryId !== '') {
+      const parsedId = Number(categoryId);
+      if (Number.isInteger(parsedId) && parsedId > 0) {
+        if (this.categoryRepository) {
+          const category = await this.categoryRepository.findById(parsedId);
+          if (category) {
+            return category.id;
+          }
+        } else {
+          return parsedId;
+        }
+      }
+    }
+
+    // 2. Metin olarak kategori adı verilmişse eşleştir
+    if (categoryName && typeof categoryName === 'string' && this.categoryRepository) {
+      const cleanName = categoryName.trim();
+      const allCategories = await this.categoryRepository.findAll({ onlyActive: true });
+
+      if (allCategories.length === 0) {
+        throw AppError.badRequest('Sistemde tanımlı aktif bir kategori bulunamadı.');
+      }
+
+      // Tam eşleşme (büyük/küçük harf duyarsız)
+      const exactMatch = allCategories.find(
+        (c) => c.name.toLowerCase() === cleanName.toLowerCase()
+      );
+      if (exactMatch) {
+        return exactMatch.id;
+      }
+
+      // & ve "ve" karakteri ile boşluk normalizasyonu
+      const normalize = (str) =>
+        str
+          .toLowerCase()
+          .replace(/&/g, 've')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      const normalizedInput = normalize(cleanName);
+      const normalizedMatch = allCategories.find(
+        (c) => normalize(c.name) === normalizedInput
+      );
+      if (normalizedMatch) {
+        return normalizedMatch.id;
+      }
+
+      // İçerme kontrolü (Örn: "Traktör & Ekipman" -> "Traktör", "Tohum & Fidan" -> "Tohum ve Fide")
+      const partialMatch = allCategories.find((c) => {
+        const itemNorm = normalize(c.name);
+        return normalizedInput.includes(itemNorm) || itemNorm.includes(normalizedInput);
+      });
+      if (partialMatch) {
+        return partialMatch.id;
+      }
+
+      // Kök kelime kuralları
+      if (normalizedInput.includes('traktor') || normalizedInput.includes('traktör')) {
+        const found = allCategories.find((c) => normalize(c.name).includes('trakt'));
+        if (found) return found.id;
+      }
+      if (normalizedInput.includes('tohum') || normalizedInput.includes('fidan') || normalizedInput.includes('fide')) {
+        const found = allCategories.find((c) => normalize(c.name).includes('tohum'));
+        if (found) return found.id;
+      }
+      if (normalizedInput.includes('yem') || normalizedInput.includes('gübre') || normalizedInput.includes('gubre')) {
+        const found = allCategories.find((c) => normalize(c.name).includes('yem'));
+        if (found) return found.id;
+      }
+      if (normalizedInput.includes('hayvan')) {
+        const found = allCategories.find((c) => normalize(c.name).includes('hayvan'));
+        if (found) return found.id;
+      }
+      if (normalizedInput.includes('bahce') || normalizedInput.includes('bahçe') || normalizedInput.includes('sera')) {
+        const found = allCategories.find((c) => normalize(c.name).includes('bahçe') || normalize(c.name).includes('sera'));
+        if (found) return found.id;
+      }
+
+      // "Diğer" kategorisi varsa
+      const otherCat = allCategories.find((c) => normalize(c.name).includes('diğer') || normalize(c.name).includes('diger'));
+      if (otherCat) {
+        return otherCat.id;
+      }
+
+      // Varsayılan olarak ilk aktif kategori
+      return allCategories[0].id;
+    }
+
+    if (categoryId && Number.isInteger(Number(categoryId)) && Number(categoryId) > 0) {
+      return Number(categoryId);
+    }
+
+    throw AppError.badRequest('Geçerli bir kategori belirtilmedi.');
+  }
+
   async getAllListings(query = {}) {
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 10));
@@ -61,6 +163,13 @@ export class ListingService {
 
     const search = typeof query.search === 'string' && query.search.trim() !== ''
       ? query.search.trim()
+      : null;
+
+    const parsedCategoryId = query.categoryId !== undefined && query.categoryId !== ''
+      ? Number(query.categoryId)
+      : NaN;
+    const categoryId = Number.isInteger(parsedCategoryId) && parsedCategoryId > 0
+      ? parsedCategoryId
       : null;
 
     const category = typeof query.category === 'string' && query.category.trim() !== ''
@@ -88,14 +197,13 @@ export class ListingService {
         status = trimmedStatus;
       }
     } else {
-      // Varsayılan olarak yalnızca aktif ilanlar gösterilir
       status = 'active';
     }
 
     const parsedUserId = query.userId !== undefined && query.userId !== '' ? Number(query.userId) : NaN;
     const userId = Number.isInteger(parsedUserId) && parsedUserId > 0 ? parsedUserId : null;
 
-    const filterParams = { search, category, location, minPrice, maxPrice, status, userId };
+    const filterParams = { search, categoryId, category, location, minPrice, maxPrice, status, userId };
 
     const [items, totalItems] = await Promise.all([
       this.listingRepository.findAll({ offset, limit, ...filterParams }),
@@ -130,12 +238,14 @@ export class ListingService {
     const sellerPhone = currentUser?.phone || payload.sellerPhone || '05000000000';
     const userId = currentUser?.id ?? null;
 
+    const resolvedCategoryId = await this.#resolveCategoryId(payload.categoryId, payload.category);
+
     try {
       return await this.listingRepository.create({
         title: payload.title,
         description: payload.description,
         price: payload.price,
-        category: payload.category,
+        categoryId: resolvedCategoryId,
         location: payload.location,
         sellerName,
         sellerPhone,
@@ -177,11 +287,16 @@ export class ListingService {
       nextImageUrl = null;
     }
 
+    let resolvedCategoryId = existingListing.categoryId;
+    if (payload.categoryId !== undefined || payload.category !== undefined) {
+      resolvedCategoryId = await this.#resolveCategoryId(payload.categoryId, payload.category);
+    }
+
     const mergedData = {
       title: payload.title ?? existingListing.title,
       description: payload.description ?? existingListing.description,
       price: payload.price ?? existingListing.price,
-      category: payload.category ?? existingListing.category,
+      categoryId: resolvedCategoryId,
       location: payload.location ?? existingListing.location,
       sellerName: payload.sellerName ?? existingListing.sellerName,
       sellerPhone: payload.sellerPhone ?? existingListing.sellerPhone,
@@ -252,4 +367,3 @@ export class ListingService {
     return await this.listingRepository.updateStatus(id, normalizedStatus);
   }
 }
-
