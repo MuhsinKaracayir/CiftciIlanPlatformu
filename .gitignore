@@ -1,0 +1,11 @@
+# Logs
+*.log
+*log.txt
+adb_log.txt
+
+# Environment
+.env.local
+
+# OS Files
+.DS_Store
+Thumbs.db
