@@ -3,6 +3,10 @@
 *log.txt
 adb_log.txt
 
+# Build outputs
+**/build/
+.gradle/
+
 # Environment
 .env.local
 
