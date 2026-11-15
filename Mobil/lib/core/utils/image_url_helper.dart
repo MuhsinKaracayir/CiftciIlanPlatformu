@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 class ImageUrlHelper {
   ImageUrlHelper._();
 
-  static const String _androidHost = 'http://10.0.2.2:3000';
-  static const String _defaultHost = 'http://localhost:3000';
+  static const String _androidHost = 'https://ciftciilanplatformu.onrender.com';
+  static const String _defaultHost = 'https://ciftciilanplatformu.onrender.com';
 
   static String get baseUrl {
     if (kIsWeb) {
