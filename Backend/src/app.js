@@ -24,6 +24,11 @@ export function createApp(container) {
     })
   );
 
+  // HTTP Istek Loglama (Konsol)
+  if (container.middlewares?.loggerMiddleware) {
+    app.use(container.middlewares.loggerMiddleware);
+  }
+
   app.use(express.json({ limit: '100kb' }));
   app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 

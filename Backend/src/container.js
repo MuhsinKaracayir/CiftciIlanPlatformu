@@ -2,6 +2,7 @@ import { env } from './config/env.js';
 import { createDatabasePool } from './config/database.js';
 import { createUploadMiddleware } from './middlewares/upload.middleware.js';
 import { createAuthMiddleware } from './middlewares/auth.middleware.js';
+import { createLoggerMiddleware } from './middlewares/logger.middleware.js';
 import { ListingRepository } from './repositories/listing.repository.js';
 import { UserRepository } from './repositories/user.repository.js';
 import { ListingService } from './services/listing.service.js';
@@ -31,11 +32,12 @@ export function createContainer() {
   const listingController = new ListingController(listingService);
   const authController = new AuthController(authService);
 
-  // 6. Yetkilendirme Middleware'i
+  // 6. Yetkilendirme ve Loglama Middleware'leri
   const authMiddleware = createAuthMiddleware({
     jwtSecret: env.jwt.secret,
     userRepository,
   });
+  const loggerMiddleware = createLoggerMiddleware();
 
   return Object.freeze({
     env,
@@ -55,6 +57,7 @@ export function createContainer() {
     middlewares: Object.freeze({
       uploadMiddleware,
       authMiddleware,
+      loggerMiddleware,
     }),
   });
 }

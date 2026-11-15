@@ -36,6 +36,24 @@ export class ListingService {
     }
   }
 
+  #verifyListingOwnership(existingListing, currentUser) {
+    if (!currentUser) {
+      throw AppError.unauthorized('Bu işlemi gerçekleştirmek için giriş yapmanız gerekmektedir.');
+    }
+
+    const isAdmin = currentUser.role === 'admin';
+    const isOwner =
+      existingListing.userId !== null &&
+      existingListing.userId !== undefined &&
+      existingListing.userId === currentUser.id;
+
+    if (!isOwner && !isAdmin) {
+      throw AppError.forbidden(
+        'Bu işlem için yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici gerçekleştirebilir).'
+      );
+    }
+  }
+
   async getAllListings(query = {}) {
     const page = Math.max(1, Number(query.page) || 1);
     const limit = Math.min(100, Math.max(1, Number(query.limit) || 10));
@@ -142,18 +160,13 @@ export class ListingService {
       throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
-    if (currentUser && existingListing.userId) {
-      const isOwner = existingListing.userId === currentUser.id;
-      const isAdmin = currentUser.role === 'admin';
-
-      if (!isOwner && !isAdmin) {
-        if (uploadedImageUrl) {
-          await this.#deleteImageFromDisk(uploadedImageUrl);
-        }
-        throw AppError.forbidden(
-          'Bu ilanı güncelleme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici güncelleyebilir).'
-        );
+    try {
+      this.#verifyListingOwnership(existingListing, currentUser);
+    } catch (err) {
+      if (uploadedImageUrl) {
+        await this.#deleteImageFromDisk(uploadedImageUrl);
       }
+      throw err;
     }
 
     let nextImageUrl = existingListing.imageUrl;
@@ -205,16 +218,7 @@ export class ListingService {
       throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
-    if (currentUser && existingListing.userId) {
-      const isOwner = existingListing.userId === currentUser.id;
-      const isAdmin = currentUser.role === 'admin';
-
-      if (!isOwner && !isAdmin) {
-        throw AppError.forbidden(
-          'Bu ilanı silme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici silebilir).'
-        );
-      }
-    }
+    this.#verifyListingOwnership(existingListing, currentUser);
 
     const isDeleted = await this.listingRepository.deleteById(id);
 
@@ -243,16 +247,7 @@ export class ListingService {
       throw AppError.notFound(`ID değeri ${id} olan ilan bulunamadı.`);
     }
 
-    if (currentUser && existingListing.userId) {
-      const isOwner = existingListing.userId === currentUser.id;
-      const isAdmin = currentUser.role === 'admin';
-
-      if (!isOwner && !isAdmin) {
-        throw AppError.forbidden(
-          'Bu ilanın durumunu değiştirme yetkiniz bulunmamaktadır (Yalnızca ilan sahibi veya yönetici değiştirebilir).'
-        );
-      }
-    }
+    this.#verifyListingOwnership(existingListing, currentUser);
 
     return await this.listingRepository.updateStatus(id, normalizedStatus);
   }
