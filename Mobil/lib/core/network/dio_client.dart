@@ -6,8 +6,8 @@ import '../storage/token_storage.dart';
 import 'auth_interceptor.dart';
 
 class DioClient {
-  static const String _androidBaseUrl = 'http://10.0.2.2:3000/api/v1';
-  static const String _defaultBaseUrl = 'http://localhost:3000/api/v1';
+  static const String _androidBaseUrl = 'https://ciftciilanplatformu.onrender.com/api/v1';
+  static const String _defaultBaseUrl = 'https://ciftciilanplatformu.onrender.com/api/v1';
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
