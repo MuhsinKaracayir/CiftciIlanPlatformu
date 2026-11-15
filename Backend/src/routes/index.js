@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { createListingRoutes } from './listing.routes.js';
 import { createAuthRoutes } from './auth.routes.js';
+import { createCategoryRoutes } from './category.routes.js';
 
 export function createApiRoutes({ controllers, middlewares, dbPool }) {
   const router = Router();
@@ -20,6 +21,11 @@ export function createApiRoutes({ controllers, middlewares, dbPool }) {
   );
 
   router.use(
+    '/categories',
+    createCategoryRoutes(controllers.categoryController, middlewares.authMiddleware)
+  );
+
+  router.use(
     '/listings',
     createListingRoutes(
       controllers.listingController,
@@ -30,4 +36,3 @@ export function createApiRoutes({ controllers, middlewares, dbPool }) {
 
   return router;
 }
-

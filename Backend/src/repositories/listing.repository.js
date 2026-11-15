@@ -18,7 +18,9 @@ export class ListingRepository {
       title: row.Title,
       description: row.Description,
       price: Number(row.Price),
-      category: row.Category,
+      categoryId: row.CategoryId,
+      categoryName: row.CategoryName ?? null,
+      category: row.CategoryName ?? null,
       location: row.Location,
       sellerName: row.SellerName,
       sellerPhone: row.SellerPhone,
@@ -32,6 +34,7 @@ export class ListingRepository {
 
   #bindFilterInputs(request, {
     search = null,
+    categoryId = null,
     category = null,
     location = null,
     minPrice = null,
@@ -40,6 +43,7 @@ export class ListingRepository {
     userId = null,
   }) {
     request.input('search', sql.NVarChar(200), search);
+    request.input('categoryId', sql.Int, categoryId);
     request.input('category', sql.NVarChar(100), category);
     request.input('location', sql.NVarChar(150), location);
     request.input('minPrice', sql.Decimal(18, 2), minPrice);
@@ -52,6 +56,7 @@ export class ListingRepository {
     offset = 0,
     limit = 10,
     search = null,
+    categoryId = null,
     category = null,
     location = null,
     minPrice = null,
@@ -62,32 +67,35 @@ export class ListingRepository {
     const request = this.dbPool.request();
     request.input('offset', sql.Int, offset);
     request.input('limit', sql.Int, limit);
-    this.#bindFilterInputs(request, { search, category, location, minPrice, maxPrice, status, userId });
+    this.#bindFilterInputs(request, { search, categoryId, category, location, minPrice, maxPrice, status, userId });
 
     const query = `
       SELECT
-        Id,
-        Title,
-        Description,
-        Price,
-        Category,
-        Location,
-        SellerName,
-        SellerPhone,
-        ImageUrl,
-        UserId,
-        Status,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.Listings
-      WHERE (@search IS NULL OR Title LIKE N'%' + @search + N'%' OR Description LIKE N'%' + @search + N'%')
-        AND (@category IS NULL OR Category = @category)
-        AND (@location IS NULL OR Location LIKE N'%' + @location + N'%')
-        AND (@minPrice IS NULL OR Price >= @minPrice)
-        AND (@maxPrice IS NULL OR Price <= @maxPrice)
-        AND (@status IS NULL OR Status = @status)
-        AND (@userId IS NULL OR UserId = @userId)
-      ORDER BY CreatedAt DESC, Id DESC
+        L.Id,
+        L.Title,
+        L.Description,
+        L.Price,
+        L.CategoryId,
+        C.Name AS CategoryName,
+        L.Location,
+        L.SellerName,
+        L.SellerPhone,
+        L.ImageUrl,
+        L.UserId,
+        L.Status,
+        L.CreatedAt,
+        L.UpdatedAt
+      FROM dbo.Listings L
+      INNER JOIN dbo.Categories C ON L.CategoryId = C.Id
+      WHERE (@search IS NULL OR L.Title LIKE N'%' + @search + N'%' OR L.Description LIKE N'%' + @search + N'%')
+        AND (@categoryId IS NULL OR L.CategoryId = @categoryId)
+        AND (@category IS NULL OR LOWER(C.Name) = LOWER(@category))
+        AND (@location IS NULL OR L.Location LIKE N'%' + @location + N'%')
+        AND (@minPrice IS NULL OR L.Price >= @minPrice)
+        AND (@maxPrice IS NULL OR L.Price <= @maxPrice)
+        AND (@status IS NULL OR L.Status = @status)
+        AND (@userId IS NULL OR L.UserId = @userId)
+      ORDER BY L.CreatedAt DESC, L.Id DESC
       OFFSET @offset ROWS
       FETCH NEXT @limit ROWS ONLY;
     `;
@@ -98,6 +106,7 @@ export class ListingRepository {
 
   async count({
     search = null,
+    categoryId = null,
     category = null,
     location = null,
     minPrice = null,
@@ -106,18 +115,20 @@ export class ListingRepository {
     userId = null,
   } = {}) {
     const request = this.dbPool.request();
-    this.#bindFilterInputs(request, { search, category, location, minPrice, maxPrice, status, userId });
+    this.#bindFilterInputs(request, { search, categoryId, category, location, minPrice, maxPrice, status, userId });
 
     const query = `
       SELECT COUNT(1) AS TotalCount
-      FROM dbo.Listings
-      WHERE (@search IS NULL OR Title LIKE N'%' + @search + N'%' OR Description LIKE N'%' + @search + N'%')
-        AND (@category IS NULL OR Category = @category)
-        AND (@location IS NULL OR Location LIKE N'%' + @location + N'%')
-        AND (@minPrice IS NULL OR Price >= @minPrice)
-        AND (@maxPrice IS NULL OR Price <= @maxPrice)
-        AND (@status IS NULL OR Status = @status)
-        AND (@userId IS NULL OR UserId = @userId);
+      FROM dbo.Listings L
+      INNER JOIN dbo.Categories C ON L.CategoryId = C.Id
+      WHERE (@search IS NULL OR L.Title LIKE N'%' + @search + N'%' OR L.Description LIKE N'%' + @search + N'%')
+        AND (@categoryId IS NULL OR L.CategoryId = @categoryId)
+        AND (@category IS NULL OR LOWER(C.Name) = LOWER(@category))
+        AND (@location IS NULL OR L.Location LIKE N'%' + @location + N'%')
+        AND (@minPrice IS NULL OR L.Price >= @minPrice)
+        AND (@maxPrice IS NULL OR L.Price <= @maxPrice)
+        AND (@status IS NULL OR L.Status = @status)
+        AND (@userId IS NULL OR L.UserId = @userId);
     `;
 
     const result = await request.query(query);
@@ -130,21 +141,23 @@ export class ListingRepository {
 
     const query = `
       SELECT
-        Id,
-        Title,
-        Description,
-        Price,
-        Category,
-        Location,
-        SellerName,
-        SellerPhone,
-        ImageUrl,
-        UserId,
-        Status,
-        CreatedAt,
-        UpdatedAt
-      FROM dbo.Listings
-      WHERE Id = @id;
+        L.Id,
+        L.Title,
+        L.Description,
+        L.Price,
+        L.CategoryId,
+        C.Name AS CategoryName,
+        L.Location,
+        L.SellerName,
+        L.SellerPhone,
+        L.ImageUrl,
+        L.UserId,
+        L.Status,
+        L.CreatedAt,
+        L.UpdatedAt
+      FROM dbo.Listings L
+      INNER JOIN dbo.Categories C ON L.CategoryId = C.Id
+      WHERE L.Id = @id;
     `;
 
     const result = await request.query(query);
@@ -155,7 +168,7 @@ export class ListingRepository {
     title,
     description,
     price,
-    category,
+    categoryId,
     location,
     sellerName,
     sellerPhone,
@@ -167,7 +180,7 @@ export class ListingRepository {
     request.input('title', sql.NVarChar(200), title);
     request.input('description', sql.NVarChar(sql.MAX), description);
     request.input('price', sql.Decimal(18, 2), price);
-    request.input('category', sql.NVarChar(100), category);
+    request.input('categoryId', sql.Int, categoryId);
     request.input('location', sql.NVarChar(150), location);
     request.input('sellerName', sql.NVarChar(120), sellerName);
     request.input('sellerPhone', sql.NVarChar(30), sellerPhone);
@@ -180,7 +193,7 @@ export class ListingRepository {
         Title,
         Description,
         Price,
-        Category,
+        CategoryId,
         Location,
         SellerName,
         SellerPhone,
@@ -188,12 +201,12 @@ export class ListingRepository {
         UserId,
         Status
       )
-      OUTPUT INSERTED.*
+      OUTPUT INSERTED.Id
       VALUES (
         @title,
         @description,
         @price,
-        @category,
+        @categoryId,
         @location,
         @sellerName,
         @sellerPhone,
@@ -204,7 +217,8 @@ export class ListingRepository {
     `;
 
     const result = await request.query(query);
-    return this.#mapRow(result.recordset[0]);
+    const insertedId = result.recordset[0]?.Id;
+    return await this.findById(insertedId);
   }
 
   async update(
@@ -213,7 +227,7 @@ export class ListingRepository {
       title,
       description,
       price,
-      category,
+      categoryId,
       location,
       sellerName,
       sellerPhone,
@@ -226,7 +240,7 @@ export class ListingRepository {
     request.input('title', sql.NVarChar(200), title);
     request.input('description', sql.NVarChar(sql.MAX), description);
     request.input('price', sql.Decimal(18, 2), price);
-    request.input('category', sql.NVarChar(100), category);
+    request.input('categoryId', sql.Int, categoryId);
     request.input('location', sql.NVarChar(150), location);
     request.input('sellerName', sql.NVarChar(120), sellerName);
     request.input('sellerPhone', sql.NVarChar(30), sellerPhone);
@@ -239,19 +253,18 @@ export class ListingRepository {
         Title = @title,
         Description = @description,
         Price = @price,
-        Category = @category,
+        CategoryId = @categoryId,
         Location = @location,
         SellerName = @sellerName,
         SellerPhone = @sellerPhone,
         ImageUrl = @imageUrl,
         Status = COALESCE(@status, Status),
         UpdatedAt = SYSUTCDATETIME()
-      OUTPUT INSERTED.*
       WHERE Id = @id;
     `;
 
-    const result = await request.query(query);
-    return this.#mapRow(result.recordset[0]);
+    await request.query(query);
+    return await this.findById(id);
   }
 
   async updateStatus(id, status) {
@@ -264,12 +277,11 @@ export class ListingRepository {
       SET
         Status = @status,
         UpdatedAt = SYSUTCDATETIME()
-      OUTPUT INSERTED.*
       WHERE Id = @id;
     `;
 
-    const result = await request.query(query);
-    return this.#mapRow(result.recordset[0]);
+    await request.query(query);
+    return await this.findById(id);
   }
 
   async deleteById(id) {
@@ -285,4 +297,3 @@ export class ListingRepository {
     return result.rowsAffected[0] > 0;
   }
 }
-
