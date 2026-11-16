@@ -10,7 +10,7 @@
 
 ## Kurulum ve Çalıştırma Yöntemleri
 
-### Yöntem 1: Docker ile Çalıştırma (Önerilen / Tek Komut)
+### Yöntem 1: Docker ile Çalıştırma (Önerilen)
 
 Tüm sistemi (Veritabanı, Backend ve Frontend) tek bir komutla ayağa kaldırmak için sisteminizde Docker Desktop kurulu olması yeterlidir.
 
