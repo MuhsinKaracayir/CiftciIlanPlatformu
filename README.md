@@ -36,7 +36,8 @@ Tüm sistemi (Veritabanı, Backend ve Frontend) tek bir komutla ayağa kaldırma
    * **REST API (Backend):** `http://localhost:3000`
    * **Veritabanı (MS SQL):** `localhost:1433` (Kullanıcı: `sa`, Şifre: `YourStrong!Password123`)
 
-*Not: Veritabanı tabloları ve test verileri ilk çalıştırmada `init.sql` scripti tarafından otomatik olarak yüklenir.*
+*Not 1: Veritabanı tabloları ve test verileri ilk çalıştırmada `init.sql` scripti tarafından otomatik olarak yüklenir.*
+*Not 2: Mobil uygulama Docker konteynerine dahil değildir; Android Studio veya VS Code üzerinden çalıştırılarak incelenebilir (Detaylı adımlar için [Mobil/README.md](Mobil/README.md) dosyasını inceleyebilirsiniz).*
 
 ---
 
@@ -80,6 +81,8 @@ Docker kullanmadan çalıştırmak isterseniz aşağıdaki adımları sırasıyl
   Arayüze `http://localhost:5173` adresinden erişebilirsiniz.
 
 #### 4. Mobil (Flutter)
+*Mobil uygulamanın kurulum, emülatör yapılandırması ve detaylı test adımları için [Mobil/README.md](Mobil/README.md) rehberini inceleyebilirsiniz.*
+
 * `Mobil` klasörüne geçin ve paketleri indirin:
   ```bash
   cd ../Mobil
