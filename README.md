@@ -1,12 +1,6 @@
-# Çiftçi İlan Platformu
-
-Tarım makineleri, ekipmanları, tohum, gübre ve zirai ürünlerin alım satımını sağlayan; Web, Mobil ve REST API bileşenlerinden oluşan çok katmanlı ilan platformu.
-
----
-
 ## Proje Mimarisi ve Teknolojiler
 
-* **Backend:** Node.js (v20+), Express.js, MS SQL Server, Katmanlı Mimari (N-Tier Architecture), Bağımlılık Enjeksiyonu (DI), JWT Kimlik Doğrulama
+* **Backend:** Node.js (v20+), Express.js, MS SQL Server, Katmanlı Mimari (N-Tier Architecture), Dependency Injeciton (DI), JWT Kimlik Doğrulama
 * **Frontend:** React 18, Vite, Tailwind CSS, Axios, Lucide React
 * **Mobil:** Flutter (Dart), Dio, Provider, Güvenli Depolama (Flutter Secure Storage)
 * **Veritabanı:** Microsoft SQL Server 2022
@@ -32,8 +26,8 @@ Tüm sistemi (Veritabanı, Backend ve Frontend) tek bir komutla ayağa kaldırma
    ```
 
 3. Hizmetler hazır olduğunda tarayıcınızdan erişebilirsiniz:
-   * **Web Arayüzü (Frontend):** `http://localhost:5173` veya `http://localhost:80`
    * **REST API (Backend):** `http://localhost:3000`
+   * **Web Arayüzü (Frontend):** `http://localhost:5173` veya `http://localhost:80`
    * **Veritabanı (MS SQL):** `localhost:1433` (Kullanıcı: `sa`, Şifre: `YourStrong!Password123`)
 
 *Not: Veritabanı tabloları ve test verileri ilk çalıştırmada `init.sql` scripti tarafından otomatik olarak yüklenir.*
