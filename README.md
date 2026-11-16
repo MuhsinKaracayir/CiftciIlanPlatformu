@@ -31,6 +31,7 @@ Tüm sistemi (Veritabanı, Backend ve Frontend) tek bir komutla ayağa kaldırma
    * **Veritabanı (MS SQL):** `localhost:1433` (Kullanıcı: `sa`, Şifre: `YourStrong!Password123`)
 
 *Not 1: Veritabanı tabloları ve test verileri ilk çalıştırmada `init.sql` scripti tarafından otomatik olarak yüklenir.*
+
 *Not 2: Mobil uygulama Docker konteynerine dahil değildir; Android Studio veya VS Code üzerinden çalıştırılarak incelenebilir (Detaylı adımlar için [Mobil/README.md](Mobil/README.md) dosyasını inceleyebilirsiniz).*
 
 ---
