@@ -1,3 +1,9 @@
+
+## Canlıdaki projeyi test etmek için:
+https://ciftciilanplatformu.netlify.app
+
+
+
 ## Proje Mimarisi ve Teknolojiler
 
 * **Backend:** Node.js (v20+), Express.js, MS SQL Server, Katmanlı Mimari (N-Tier Architecture), Dependency Injeciton (DI), JWT Kimlik Doğrulama
