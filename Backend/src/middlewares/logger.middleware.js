@@ -1,3 +1,5 @@
+//Logları takip etmek isterseniz docker compose logs -f backend komutu ile terminal üzerinden veya Docker Desktop üzerinden takip edebilirsiniz.
+
 export function createLoggerMiddleware() {
   return (req, res, next) => {
     const startTime = process.hrtime.bigint();
